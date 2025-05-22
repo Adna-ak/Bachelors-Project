@@ -1,0 +1,200 @@
+"""
+File:     llm_interface.py
+Authors:  Özde Pilli (s5257018) and Adna Kapidžić (s5256100)
+Group:    5
+
+Description:
+    This module provides the LLMGameHelper class, which facilitates the WOW
+    (With Other Words) game, also known as Taboo. In this game, the robot
+    serves as the host and the user tries to guess a secret word by asking
+    yes/no questions.The purpose of the game is to help young learners
+    (7-8-year-old native Dutch speakers learning English) practice English
+    in a fun and engaging way, while interacting with the robot. The game uses
+    simple and clear language in both Dutch and English. The class uses an
+    external utility function, generate_message_using_llm, to generate the
+    responses and prompts needed for different stages of the game.
+"""
+
+from typing import List
+from src.utils import generate_message_using_llm
+
+
+class LLMGameHelper:
+    """
+    A helper class for managing the WOW (Taboo) game in which a robot acts as
+    the host and the player guesses a secret word by asking yes/no questions.
+    This class contains methods to generate the welcome message, explain the
+    rules of the game, generate random secret words, process user inputs,
+    provide hints, and check if guesses are correct. Each method interacts
+    with an LLM to generate or process the necessary content.
+    """
+    def __init__(self):
+        self.standard_prompt_addition = (
+            "Use simple and clear language that a 7-8-year-old native Dutch speaker "
+            "learning English as a second language can understand. "
+            "Approach them like a friend."
+        )
+
+    # SIMILAR TO ASSIGNMENTS 1 AND 2
+    def generate_welcome_message(self) -> str:
+        """
+        Generates a friendly welcome message introducing Alpha and expressing
+        excitement to play a game.
+
+        Returns:
+            str: Single sentence welcome message.
+        """
+        prompt = (
+            "Generate a friendly welcome message introducing yourself as Alpha. "
+            "Mention that you are excited to play a game with the user. "
+            "Generate only one sentence in Dutch."
+        )
+        return generate_message_using_llm(prompt + " " + self.standard_prompt_addition)
+
+    # SIMILAR TO ASSIGNMENTS 1 AND 2
+    def generate_explanation_message(self) -> str:
+        """
+        Generates an explanation of the WOW (Taboo) game where the robot will
+        be the host.
+
+        Returns:
+            str: Short explanation of the game.
+        """
+        prompt = (
+            "Describe the WOW (With Other Words) game, also known as Taboo, in a fun and engaging way. "
+            "Explain the roles: you think of a word, and the player asks yes or no questions to guess it. "
+            "You can only respond briefly, giving short answers or hints "
+            "while avoiding abbreviations, or any part of the word. "
+            "At the end of a round, you (singular) will create a short playful song about the secret word. "
+            "Mention that the player can stop anytime by saying 'goodbye', 'bye', 'stop', 'doei', 'tot ziens', etc. "
+            "Encourage the player to have fun and request hints when needed. "
+            "Specify that the player can only ask hints in English or by saying the words 'hint', 'help', etc. "
+            "The explanation should be in Dutch only. Keep the explanation at most four sentences long."
+        )
+        return generate_message_using_llm(prompt + " " + self.standard_prompt_addition)
+
+    def generate_random_word(self, used_secret_words: List[str], topic: str | None = None) -> str:
+        """
+        Generates a random noun (secret word) for the game when the robot is
+        the host.
+
+        Args:
+            used_secret_words (List[str]): List of words that have already been
+                used as secret words in previous rounds. The generated word
+                should not be present in this list.
+            topic (str | None, optional): The topic or category to generate
+                the word from. If no topic is provided, a random noun is
+                generated. Defaults to None.
+
+        Returns:
+            str: Generated random noun (secret word).
+        """
+        prompt = (
+            f"Generate a random American English noun{' related to the topic ' + topic if topic else ''}. "
+            "Generate just one word. Make sure that the word is not in this list: "
+            f"{used_secret_words}."
+        )
+        word_to_guess = generate_message_using_llm(prompt)
+        return word_to_guess
+
+    # SIMILAR TO ASSIGNMENTS 1 AND 2
+    def recognize_yes_or_no(self, user_input: str) -> str:
+        """
+        Determines if the user's response is 'yes' or 'no'.
+
+        Args:
+            user_input (str): User's input.
+
+        Returns:
+            str: Either 'yes' or 'no' based on the input.
+        """
+        prompt = (
+            f"The user has said the following: '{user_input}'. Your task is to determine whether "
+            "they said 'yes' or 'no'. Respond with only 'yes' or 'no' based on the input. "
+            "If unclear, return the most likely option."
+        )
+        return generate_message_using_llm(prompt)
+
+    def process_user_question(self, secret_word: str, question: str) -> str:
+        """
+        Processes the user's question and returns a short answer, explaining
+        whether the question is related to the secret word without revealing
+        the secret word.
+
+        Args:
+            secret_word (str): Secret word in the game.
+            question (str): User's question.
+
+        Returns:
+            str: Short answer explaining if the question is related to the secret
+            word without revealing it.
+        """
+        prompt = (
+            f"The user has asked the following question: '{question}' about the secret word: '{secret_word}'. "
+            "Your response should follow this format: first answer with either 'yes' or 'no', then provide a short explanation in English. "
+            "For example: 'yes, ...' or 'no, ...'. "
+            "Do not mention the secret word, including any abbreviations or parts of the word. "
+            "Your explanation should help the user understand more about the secret word without telling them what it is. "
+            "Generate max 15 words."
+        )
+        # Even though we specified to not mention the secret word, the LLM might still do it in some cases
+        return generate_message_using_llm(prompt + " " + self.standard_prompt_addition)
+
+    def generate_hint(self, secret_word: str, hint_property: str | None = None) -> str:
+        """
+        Generates a hint for the user based on the secret word, optionally
+        including a specific hint property.
+
+        Args:
+            secret_word (str): Secret word in the game.
+            hint_property (str | None, optional): An optional specific feature
+                or characteristic to be included in the hint.
+
+        Returns:
+            str: Generated hint in American English.
+        """
+        prompt = (
+            f"The user is struggling to guess the secret word, which is {secret_word}. "
+            f"Generate a helpful hint{f', mentioning {hint_property},' if hint_property else ''} "
+            "without revealing the secret word, including abbreviations or any part of the word. "
+            "Keep the hint to one sentence and in English."
+        )
+        return generate_message_using_llm(prompt + " " + self.standard_prompt_addition)
+
+    # SIMILAR TO ASSIGNMENTS 1 AND 2
+    def determine_question_or_guess(self, user_input: str, secret_word: str) -> str:
+        """
+        Determines if the user's input is a question or a guess about the
+        secret word.
+
+        Args:
+            user_input (str): User's input.
+            secret_word (str): Secret word in the game.
+
+        Returns:
+            str: 'question' or 'guess' based on the user's input.
+        """
+        prompt = (
+            f"The user has said: '{user_input}'. Determine if this is a yes/no question about the secret word "
+            f"or a guess of the secret word: {secret_word}. Respond with only 'question' or 'guess'."
+        )
+        return generate_message_using_llm(prompt)
+
+    # SIMILAR TO ASSIGNMENTS 1 AND 2
+    def check_if_correct_guess(self, secret_word: str, guess: str) -> str:
+        """
+        Checks if the player's guess matches the secret word and returns a
+        response.
+
+        Args:
+            secret_word (str): Secret word in the game.
+            guess (str): Word guessed by the player.
+
+        Returns:
+            str: Either 'correct' or 'incorrect'.
+        """
+        prompt = (
+            f"The user guessed: '{guess}'. The correct secret word is: '{secret_word}'. "
+            "Respond with only 'correct' or 'incorrect'."
+        )
+        return generate_message_using_llm(prompt)

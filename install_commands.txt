@@ -1,0 +1,13 @@
+pip install nltk
+pip install spacy
+pip3 install autobahn[twisted,serialization] pyopenssl
+pip3 install alpha_mini_rug
+
+Note: You may receive a msgpack error, in which case you need to install the
+msgpack package in python (pip3 install msgpack)
+
+pip install pyaudio
+pip install pydub
+pip install -U openai-whisper
+pip install openai
+pip install langdetect
