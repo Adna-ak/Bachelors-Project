@@ -16,12 +16,15 @@ except LookupError:
     print("Stopwords not found, downloading...")
     nltk.download('stopwords')
 
+VALID_GAME_VERSIONS = {"experiment", "control"}
 PARTICIPANT_FILE = "participants.json"
 
 # === CONFIGURE THESE HERE ===
-GAME_VERSION = "experiment"   # or "control"
-PARTICIPANT_NUM = "1"         # string
-PARTICIPANT_NAME = "Alice Johnson"  # string
+GAME_VERSION = "experiment"   # "experiment" or "control"
+PARTICIPANT_NUM = "01"         # string (01, 02, 03, ..., 19, 20, 21)
+# Numbers for experiment condition: 01-11
+# Numbers for control condition: 12-22
+PARTICIPANT_NAME = "Alice Johnson"  # string, full name
 
 def load_participants():
     if os.path.exists(PARTICIPANT_FILE):
@@ -76,6 +79,10 @@ def wait(seconds):
 
 @inlineCallbacks
 def main(session, details) -> Generator[None, None, None]:
+    if GAME_VERSION not in VALID_GAME_VERSIONS:
+        print(f"Invalid GAME_VERSION '{GAME_VERSION}'. Must be one of {VALID_GAME_VERSIONS}.")
+        exit(1)
+
     yield session.call("rie.dialogue.config.native_voice", use_native_voice=False)
     yield session.call("rom.optional.behavior.play", name="BlocklyStand")
 
@@ -90,8 +97,11 @@ def main(session, details) -> Generator[None, None, None]:
     participants = update_participants_file(selected_word_list)
 
     # Introductory message
+    # SHOULD BE DIFFERENT FOR EXPERIMENT AND CONTROL GROUPS: hints etc
     prompt = (
-        ""
+        "Hallo! Wat leuk dat je meedoet aan het experiment. "
+        "We gaan straks samen een paar korte spelletjes doen. "
+        "Volg gewoon mijn uitleg en dan komt het helemaal goed!"
     )
     yield say_animated(session, prompt, language="nl")
 

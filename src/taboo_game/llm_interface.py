@@ -2,7 +2,6 @@ from src.utils import generate_message_using_llm
 
 
 class LLMGameHelper:
-
     def __init__(self):
         self.standard_prompt_addition = (
             "Use simple and clear language that a 7-8-year-old native Dutch speaker "
@@ -52,24 +51,12 @@ class LLMGameHelper:
         # Even though we specified to not mention the secret word, the LLM might still do it in some cases
         return generate_message_using_llm(prompt + " " + self.standard_prompt_addition)
 
-    def generate_hint(self, secret_word: str, hint_property: str | None = None) -> str:
-        """
-        Generates a hint for the user based on the secret word, optionally
-        including a specific hint property.
-
-        Args:
-            secret_word (str): Secret word in the game.
-            hint_property (str | None, optional): An optional specific feature
-                or characteristic to be included in the hint.
-
-        Returns:
-            str: Generated hint in American English.
-        """
+    def generate_hint(self, secret_word: str) -> str:
         prompt = (
             f"The user is struggling to guess the secret word, which is {secret_word}. "
-            f"Generate a helpful hint{f', mentioning {hint_property},' if hint_property else ''} "
-            "without revealing the secret word, including abbreviations or any part of the word. "
-            "Keep the hint to one sentence and in English."
+            "Generate a helpful hint without revealing the secret word, "
+            "including abbreviations or any part of the word. "
+            "Keep the hint to one or two sentences and in English."
         )
         return generate_message_using_llm(prompt + " " + self.standard_prompt_addition)
 
