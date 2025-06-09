@@ -32,7 +32,6 @@ class StressWordAnalyzer:
         self.stop_words_nl = set(stopwords.words('dutch'))
         self.stop_words = self.stop_words_en.union(self.stop_words_nl)
 
-    # SIMILAR TO ASSIGNMENTS 1 AND 2
     def get_llm_stress_words(self) -> List[Tuple[int, str]]:
         """
         Identifies important words in the text using an LLM that should be
@@ -42,7 +41,6 @@ class StressWordAnalyzer:
             List[Tuple[int, str]]: A list of tuples, each containing the index
             of the word in the text and the corresponding word.
         """
-        print("Entering get_llm_stress_words function...")
         prompt = (
             f"Identify the MOST IMPORTANT words that should be emphasized with a small arm or head movement in this text: {self.text}. "
             f"Select at most 1 word per 9 words. Focus on words that carry key meaning or emotion. "
@@ -53,14 +51,11 @@ class StressWordAnalyzer:
         response = RegexpTokenizer(r"\b\w+(?:'\w+)?\b").tokenize(response.lower().split('\n')[0])
         # Cleaning up the response: removing unwanted characters like punctuation and filtering out emojis
         # And if LLM's response includes additional lines (e.g., "1, 2\n hi, i'm"), it is handled here
-        print(f"LLM response: {response}")
 
         try:
             stress_word_positions = [int(pos) for pos in response]
         except ValueError:
-            print("Response contains words instead of positions, extracting word indices...")
             # In case LLM returns list of words (happens sometimes even though we specified it not to)
-
             stress_word_positions = []
             for word in response:
                 for i, w in enumerate(self.words):
@@ -71,9 +66,6 @@ class StressWordAnalyzer:
         valid_positions = [index for index in stress_word_positions if 0 <= index < len(self.words)]
         stress_words = [(index, self.words[index]) for index in valid_positions]
         stress_words.sort(key=lambda x: x[0])
-
-        print(f"Identified stress words: {stress_words}")
-        print("Exiting get_llm_stress_words function...")
         return stress_words
 
     def get_pos_tag_stress_words(self) -> List[Tuple[int, str]]:
@@ -87,8 +79,6 @@ class StressWordAnalyzer:
             List[Tuple[int, str]]: A list of tuples containing the index and
             the corresponding stress word.
         """
-        print("Entering get_pos_tag_stress_words function...")
-
         if self.language == "nl":
             nlp_model = spacy.load("nl_core_news_sm")
         else:
@@ -101,14 +91,10 @@ class StressWordAnalyzer:
             token = doc[0]  # This model causes inaccuracies for contractions, but our previous approach was not suitable for Dutch text
 
             if token.pos_ in ('NOUN', 'VERB', 'ADJ', 'ADV') and token.text.lower() not in self.stop_words:
-                print(f"Adding word '{token.text}' at index {index} as a stress word.")
                 stress_words.append((index, token.text))
 
-        print(f"Identified stress words: {stress_words}")
-        print("Exiting get_pos_tag_stress_words function...")
         return stress_words
 
-    # SIMILAR TO ASSIGNMENTS 1 AND 2
     def get_stress_words(self) -> List[Tuple[int, str]]:
         """
         Identifies important words in a text using both LLM-based analysis and
@@ -129,8 +115,6 @@ class StressWordAnalyzer:
             movements, we decided to introduce some randomness by incorporating
             the LLM in addition to POS tagging.
         """
-        print("Entering get_stress_words function...")
-
         stress_words_llm = self.get_llm_stress_words()
         stress_words_pos = self.get_pos_tag_stress_words()
 
@@ -148,7 +132,6 @@ class StressWordAnalyzer:
                         "you", "your", "yours", "yourself", "you're", "you'll", "you've",
                         "jij", "je", "jou", "jouw", "jezelf", "u", "uw", "uzelf", "jullie"]
 
-        print("Entering loop in get_stress_words function...")
         while llm_index < len(stress_words_llm) or pos_index < len(stress_words_pos):
             if use_llm and llm_index < len(stress_words_llm):
                 llm_word_index, llm_word = stress_words_llm[llm_index]
@@ -157,13 +140,10 @@ class StressWordAnalyzer:
                     llm_index += 1
                     if stress_words and abs(llm_index - stress_words[-1][0]) < gap:
                         removed_word = stress_words.pop()
-                        print(f"Removed '{removed_word[1]}' at index {removed_word[0]} due to proximity to iconic word '{llm_word}' at index {llm_word_index}, which takes priority.")
                     continue
                 if last_position is not None and abs(llm_word_index - last_position) < gap:
-                    print(f"Skipping LLM word '{llm_word}' at index {llm_word_index} due to gap rule.")
                     llm_index += 1
                     continue
-                print(f"Selected LLM stress word '{llm_word}' at index {llm_word_index}")
                 stress_words.append((llm_word_index, llm_word))
                 last_position = llm_word_index
                 llm_index += 1
@@ -176,13 +156,10 @@ class StressWordAnalyzer:
                     pos_index += 1
                     if stress_words and abs(pos_index - stress_words[-1][0]) < gap:
                         removed_word = stress_words.pop()
-                        print(f"Removed '{removed_word[1]}' at index {removed_word[0]} due to proximity to iconic word '{pos_word}' at index {pos_word_index}, which takes priority.")
                     continue
                 if last_position is not None and abs(pos_word_index - last_position) < gap:
-                    print(f"Skipping POS word '{pos_word}' at index {pos_word_index} due to gap rule.")
                     pos_index += 1
                     continue
-                print(f"Selected POS stress word '{pos_word}' at index {pos_word_index}")
                 stress_words.append((pos_word_index, pos_word))
                 last_position = pos_word_index
                 pos_index += 1
@@ -197,7 +174,4 @@ class StressWordAnalyzer:
         seen = set()
         stress_words = [item for item in stress_words if item not in seen and not seen.add(item)]
         stress_words.sort(key=lambda x: x[0])
-
-        print("Final stress words identified:", stress_words)
-        print("Exiting get_stress_words function...")
         return stress_words

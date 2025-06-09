@@ -79,8 +79,6 @@ class MicUtil:
         if device_index is not None:
             for mic in available_mics:
                 if mic['index'] == device_index:
-                    print(f"Chosen microphone: {mic['name']} (Index: {mic['index']})")
                     return mic
 
-        print(f"Chosen microphone: {available_mics[0]['name']} (Index: {available_mics[0]['index']})")
         return available_mics[0]

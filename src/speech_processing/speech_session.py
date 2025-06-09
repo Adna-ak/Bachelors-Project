@@ -30,7 +30,6 @@ class SpeechRecognitionSession:
         self.keywords_handler = KeywordsHandler(session)
         self.praise_streak = 0
 
-    # SIMILAR TO ASSIGNMENTS 1 AND 2
     @inlineCallbacks
     def check_silence(self, silence_count: int, max_silence_count: int = 3) -> Generator[Optional[str], None, int]:
         """
@@ -106,7 +105,6 @@ class SpeechRecognitionSession:
                 # Still gives feedback after detecting quit keyword, idk why
                 if get_feedback:
                     percent_english = self.language_assistant.calculate_language_usage(user_input)
-                    print("Percentage of English:", percent_english)
                     if percent_english >= 70:  # Keeping in mind that this is for kids, 70% is okay
                         if self.praise_streak == 3:
                             self.praise_streak = 0

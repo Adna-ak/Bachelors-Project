@@ -34,9 +34,6 @@ def say_animated(session, text: str, language: str = "en") -> Generator[None, No
         Generator[None, None, None]: A coroutine generator which, when
         yielded, performs the speech and gesture sequence.
     """
-    print("Entering say_animated function...")
-    print(f"Input text: '{text}'")
-
     if language not in ["en", "nl"]:
         raise ValueError(f"Unsupported language: {language}. Only 'en' (English) and 'nl' (Dutch) are supported.")
 
@@ -46,7 +43,6 @@ def say_animated(session, text: str, language: str = "en") -> Generator[None, No
     frames = gesture_generator.get_gesture_frames()
 
     if not frames:
-        print("No movement frames generated. Skipping movements.")
         yield session.call("rie.dialogue.say", text=text)
         yield sleep(2)
         return
@@ -58,4 +54,3 @@ def say_animated(session, text: str, language: str = "en") -> Generator[None, No
     yield DeferredList([speech, movements])
     yield session.call("rom.optional.behavior.play", name="BlocklyStand")
     yield sleep(2)
-    print("Exiting say_animated function...")

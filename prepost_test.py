@@ -5,7 +5,7 @@ import glob
 import tkinter as tk
 from PIL import Image, ImageTk
 from twisted.internet.defer import inlineCallbacks, Deferred
-from twisted.internet import reactor
+
 
 class PrePostTestUI:
     def __init__(self, master, images_folder):
@@ -60,6 +60,7 @@ class PrePostTestUI:
         if not self.timeout_deferred.called:
             self.timeout_deferred.callback(None)
             self.master.quit()
+
 
 class PrePostTest:
     def __init__(self, session, words_file="words.json", images_folder="images"):
@@ -121,8 +122,7 @@ class PrePostTest:
                 root.destroy()
 
                 if selected_image is None:
-                    print(f"No selection in trial {i}, retrying same images...")
-                    continue  # Reuse same `images_shown`
+                    continue
                 
                 correct = (selected_image == target_img)
                 result = {
@@ -131,10 +131,10 @@ class PrePostTest:
                     "target_image": target_img,
                     "selected_image": selected_image,
                     "correct": correct,
-                    "filler_images": filler_imgs  # Save the actual filler images shown
+                    "filler_images": filler_imgs
                 }
                 results.append(result)
-                break  # move to next trial
+                break
 
         return results
 
@@ -148,4 +148,3 @@ class PrePostTest:
 
         with open(full_path, "w") as f:
             json.dump(results, f, indent=4)
-        print(f"Results saved to {full_path}")

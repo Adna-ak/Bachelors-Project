@@ -11,7 +11,6 @@ class KeywordsHandler:
         self.session = session
         self.game_helper = LLMGameHelper()
 
-    # SIMILAR TO ASSIGNMENTS 1 AND 2
     @inlineCallbacks
     def check_hint_keywords(self, user_input: str, secret_word: str) -> Generator[Optional[str], None, None]:
         """

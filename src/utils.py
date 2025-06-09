@@ -96,7 +96,6 @@ def generate_message_using_llm(original_prompt: str) -> str:
         profanity = check_profanity(response, lang=language if language in ["en", "nl"] else "en")
 
         if profanity and profanity.get("profanity", {}).get("matches"):
-            print("Profanity detected. Regenerating the message...")
             matches = profanity["profanity"]["matches"]
             new_words = [match["match"] for match in matches if match["match"] not in avoided_words]
 

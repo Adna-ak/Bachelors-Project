@@ -139,9 +139,13 @@ def main(session, details) -> Generator[None, None, None]:
     )
     yield say_animated(session, prompt, language="nl")
 
-    # WOW game, 5 rounds
+    prompt = ("Let's play another round!")
     random.shuffle(selected_word_list)
-    for word in selected_word_list:
+
+    # WOW game, 5 rounds
+    for i, word in enumerate(selected_word_list):
+        if i != 0:
+            yield say_animated(session, prompt, language="en")
         game.secret_word = word
         yield game.robot_is_host()
 

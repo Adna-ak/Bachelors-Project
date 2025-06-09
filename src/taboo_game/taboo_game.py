@@ -8,7 +8,6 @@ from src.taboo_game.llm_interface import LLMGameHelper
 
 
 class TabooGame:
-
     def __init__(self, session, version: str = "normal"):
         self.session = session
         self.version = version
@@ -39,7 +38,6 @@ class TabooGame:
                 hint = self.game_helper.generate_hint(self.secret_word)
             yield say_animated(self.session, hint, language="en")
 
-    # SIMILAR TO ASSIGNMENTS 1 AND 2
     @inlineCallbacks
     def robot_is_host(
         self,
@@ -101,8 +99,7 @@ class TabooGame:
                         if self.secret_word not in self.secret_words_to_repeat:
                             self.secret_words_to_repeat.append(self.secret_word)
                         message = (
-                            f"The secret word is {self.secret_word}. "
-                            "Let's play again."
+                            f"The secret word is {self.secret_word}."
                         )
                         yield say_animated(self.session, message, language="en")
                         break
