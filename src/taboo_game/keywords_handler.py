@@ -1,15 +1,3 @@
-"""
-File:     keywords_handler.py
-Authors:  Özde Pilli (s5257018) and Adna Kapidžić (s5256100)
-Group:    5
-
-Description:
-    This module contains the KeywordsHandler class, which is responsible for
-    handling user inputs related to quitting the game and requesting hints. It
-    interacts with an LLM and uses the LLMGameHelper to generate hints and
-    determine whether the user wants to quit the game.
-"""
-
 from typing import Generator, Optional
 from twisted.internet.defer import inlineCallbacks
 from src.robot_movements.say_animated import say_animated
@@ -18,11 +6,6 @@ from src.taboo_game.llm_interface import LLMGameHelper
 
 
 class KeywordsHandler:
-    """
-    Handles user input related to quitting the game and requesting hints during
-    the gameplay. This class interacts with the LLMGameHelper to generate
-    responses based on the user's input.
-    """
 
     def __init__(self, session):
         self.session = session

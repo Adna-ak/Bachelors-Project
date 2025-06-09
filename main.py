@@ -2,10 +2,13 @@ import json
 import os
 from typing import Generator
 from twisted.internet.defer import inlineCallbacks
+from twisted.internet import reactor, task
 from autobahn.twisted.component import Component, run
 import nltk
-from src.taboo_game.taboo_game import TabooGame
+import random
 from prepost_test import PrePostTest
+from src.taboo_game.taboo_game import TabooGame
+from src.robot_movements.say_animated import say_animated
 
 try:
     nltk.data.find('corpora/stopwords')
@@ -68,9 +71,16 @@ def update_participants_file(selected_words=None):
     save_participants(participants)
     return participants
 
+def wait(seconds):
+    return task.deferLater(reactor, seconds, lambda: None)
+
 @inlineCallbacks
 def main(session, details) -> Generator[None, None, None]:
+    yield session.call("rie.dialogue.config.native_voice", use_native_voice=False)
+    yield session.call("rom.optional.behavior.play", name="BlocklyStand")
+
     prepost = PrePostTest(session, words_file="words.json", images_folder="images")
+    game = TabooGame(session, GAME_VERSION)
 
     # Select and store 5 target words
     selected_words = prepost.select_words(5)
@@ -78,27 +88,117 @@ def main(session, details) -> Generator[None, None, None]:
 
     # Save participant info + selected words
     participants = update_participants_file(selected_word_list)
-    participant_name = participants[GAME_VERSION][PARTICIPANT_NUM]["name"]
 
-    print(f"Starting game for participant #{PARTICIPANT_NUM}: {participant_name} in '{GAME_VERSION}' group.")
-    print(f"Selected words: {selected_word_list}")
+    # Introductory message
+    prompt = (
+        ""
+    )
+    yield say_animated(session, prompt, language="nl")
 
-    # Run Pre-Test
+    # Pre-test explanation
+    prompt = (
+        "Ik zal nu telkens een woord per ronde opnoemen in het Engels en jij "
+        "zal het bijbehorende plaatje aan moeten klikken. Er zijn 5 rondes."
+    )
+    yield say_animated(session, prompt, language="nl")
+
+    prompt = (
+        "Put your laptop in front of the participant. "
+        "Press any key to continue with the pre-test."
+    )
+    print(prompt)
+    _ = input().strip().lower()
+
+    # Pre-test
     results_pre = yield prepost.conduct_test(selected_words, test_type="pre")
     prepost.save_results(results_pre, PARTICIPANT_NUM, GAME_VERSION, "pre")
 
-    # Run Game Phase
-    yield session.call("rie.dialogue.config.native_voice", use_native_voice=False)
-    yield session.call("rom.optional.behavior.play", name="BlocklyStand")
+    prompt = (
+        "Move your laptop out of the participant's view. "
+        "Press any key to continue with the experiment."
+    )
+    print(prompt)
+    _ = input().strip().lower()
 
-    game = TabooGame(session, GAME_VERSION)
-    yield game.play_taboo()
+    # Explanation about 1 minute waiting time
+    prompt = (
+        "We zullen nu een minuut wachten voordat we verdergaan met het "
+        "experiment. Ik zal elke tien seconden naar je zwaaien."
+    )
+    yield say_animated(session, prompt, language="nl")
 
-    # Run Post-Test
+    # Repeat BlocklyWaveRightArm every 10 seconds for 1 minute
+    for _ in range(6):
+        yield session.call("rom.optional.behavior.play", name="BlocklyWaveRightArm")
+        yield wait(10)
+
+    # Game explanation
+    prompt = (
+        "We zullen nu het spel spelen waarin jij het woord moet raden dat ik "
+        "in gedachten heb. Er zijn vijf rondes."
+    )
+    yield say_animated(session, prompt, language="nl")
+
+    # WOW game, 5 rounds
+    random.shuffle(selected_word_list)
+    for word in selected_word_list:
+        game.secret_word = word
+        yield game.robot_is_host()
+
+    # Explanation about 1 minute waiting time
+    prompt = (
+        "We zullen nu een minuut wachten voordat we verdergaan met de laatste "
+        "test. Ik zal elke tien seconden naar je zwaaien."
+    )
+    yield say_animated(session, prompt, language="nl")
+
+    # Repeat BlocklyWaveRightArm every 10 seconds for 1 minute
+    for _ in range(6):
+        yield session.call("rom.optional.behavior.play", name="BlocklyWaveRightArm")
+        yield wait(10)
+
+    # Post-test explanation
+    prompt = (
+        "Ik zal nu telkens een woord per ronde opnoemen in het Engels en jij "
+        "zal het bijbehorende plaatje aan moeten klikken. Er zijn 5 rondes."
+    )
+    yield say_animated(session, prompt, language="nl")
+
+    prompt = (
+        "Put your laptop in front of the participant. "
+        "Press any key to continue with the post-test."
+    )
+    print(prompt)
+    _ = input().strip().lower()
+
+    # Post-test
     results_post = yield prepost.conduct_test(selected_words, test_type="post")
     prepost.save_results(results_post, PARTICIPANT_NUM, GAME_VERSION, "post")
 
-    print("All phases completed. Goodbye!")
+    prompt = (
+        "Move your laptop out of the participant's view. "
+        "Press any key to continue with the experiment."
+    )
+    print(prompt)
+    _ = input().strip().lower()
+
+    # End message and explanation about evaluation form
+    prompt = (
+        "Het experiment is nu afgelopen. Bedankt voor je deelname! Je hebt "
+        "het geweldig gedaan! Je zult nu een kort formulier moeten invullen "
+        "om mij en het spel te beoordelen."
+    )
+    yield say_animated(session, prompt, language="nl")
+
+    prompt = (
+        "Did the participant fill out the evaluation form? "
+        "Did you check whether the participant wrote their name on the form? "
+        "Press any key to continue."
+    )
+    print(prompt)
+    _ = input().strip().lower()
+
+    print("==================END OF EXPERIMENT==================")
     session.leave()
 
 wamp = Component(

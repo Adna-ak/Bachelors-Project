@@ -1,32 +1,8 @@
-"""
-File:     llm_interface.py
-Authors:  Özde Pilli (s5257018) and Adna Kapidžić (s5256100)
-Group:    5
-
-Description:
-    This module provides the LLMGameHelper class, which facilitates the WOW
-    (With Other Words) game, also known as Taboo. In this game, the robot
-    serves as the host and the user tries to guess a secret word by asking
-    yes/no questions.The purpose of the game is to help young learners
-    (7-8-year-old native Dutch speakers learning English) practice English
-    in a fun and engaging way, while interacting with the robot. The game uses
-    simple and clear language in both Dutch and English. The class uses an
-    external utility function, generate_message_using_llm, to generate the
-    responses and prompts needed for different stages of the game.
-"""
-
 from src.utils import generate_message_using_llm
 
 
 class LLMGameHelper:
-    """
-    A helper class for managing the WOW (Taboo) game in which a robot acts as
-    the host and the player guesses a secret word by asking yes/no questions.
-    This class contains methods to generate the welcome message, explain the
-    rules of the game, generate random secret words, process user inputs,
-    provide hints, and check if guesses are correct. Each method interacts
-    with an LLM to generate or process the necessary content.
-    """
+
     def __init__(self):
         self.standard_prompt_addition = (
             "Use simple and clear language that a 7-8-year-old native Dutch speaker "

@@ -1,25 +1,3 @@
-"""
-File:     speech_to_text.py
-Author:  Adna Kapidžić (s5256100)
-Group:    5
-
-Description:
-    This module handles the conversion of speech to text using OpenAI's
-    Whisper model. It records audio from a microphone, processes the recorded
-    audio, and returns a transcription.
-
-    You can even use an external microphone to make the STT more accurate,
-    even though the difference is minimal if your device microphone is
-    working properly and there is not too much background noise. However,
-    we did not test the effect with speech from kids.
-
-    We tested this with the Sennheiser microphone that can be found in the
-    robotics lab, it will show up like this in the microphones list;
-    Microfoon (Sennheiser Profile). There are 4 of these in the list, but the
-    first one works best and does not trigger errors. Check on your device
-    what index the mic is on that you want to use.
-"""
-
 import os
 import wave
 import time
