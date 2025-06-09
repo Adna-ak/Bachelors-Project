@@ -15,7 +15,6 @@ Description:
     responses and prompts needed for different stages of the game.
 """
 
-from typing import List
 from src.utils import generate_message_using_llm
 
 
@@ -35,69 +34,6 @@ class LLMGameHelper:
             "Approach them like a friend."
         )
 
-    # SIMILAR TO ASSIGNMENTS 1 AND 2
-    def generate_welcome_message(self) -> str:
-        """
-        Generates a friendly welcome message introducing Alpha and expressing
-        excitement to play a game.
-
-        Returns:
-            str: Single sentence welcome message.
-        """
-        prompt = (
-            "Generate a friendly welcome message introducing yourself as Alpha. "
-            "Mention that you are excited to play a game with the user. "
-            "Generate only one sentence in Dutch."
-        )
-        return generate_message_using_llm(prompt + " " + self.standard_prompt_addition)
-
-    # SIMILAR TO ASSIGNMENTS 1 AND 2
-    def generate_explanation_message(self) -> str:
-        """
-        Generates an explanation of the WOW (Taboo) game where the robot will
-        be the host.
-
-        Returns:
-            str: Short explanation of the game.
-        """
-        prompt = (
-            "Describe the WOW (With Other Words) game, also known as Taboo, in a fun and engaging way. "
-            "Explain the roles: you think of a word, and the player asks yes or no questions to guess it. "
-            "You can only respond briefly, giving short answers or hints "
-            "while avoiding abbreviations, or any part of the word. "
-            "At the end of a round, you (singular) will create a short playful song about the secret word. "
-            "Mention that the player can stop anytime by saying 'goodbye', 'bye', 'stop', 'doei', 'tot ziens', etc. "
-            "Encourage the player to have fun and request hints when needed. "
-            "Specify that the player can only ask hints in English or by saying the words 'hint', 'help', etc. "
-            "The explanation should be in Dutch only. Keep the explanation at most four sentences long."
-        )
-        return generate_message_using_llm(prompt + " " + self.standard_prompt_addition)
-
-    def generate_random_word(self, used_secret_words: List[str], topic: str | None = None) -> str:
-        """
-        Generates a random noun (secret word) for the game when the robot is
-        the host.
-
-        Args:
-            used_secret_words (List[str]): List of words that have already been
-                used as secret words in previous rounds. The generated word
-                should not be present in this list.
-            topic (str | None, optional): The topic or category to generate
-                the word from. If no topic is provided, a random noun is
-                generated. Defaults to None.
-
-        Returns:
-            str: Generated random noun (secret word).
-        """
-        prompt = (
-            f"Generate a random American English noun{' related to the topic ' + topic if topic else ''}. "
-            "Generate just one word. Make sure that the word is not in this list: "
-            f"{used_secret_words}."
-        )
-        word_to_guess = generate_message_using_llm(prompt)
-        return word_to_guess
-
-    # SIMILAR TO ASSIGNMENTS 1 AND 2
     def recognize_yes_or_no(self, user_input: str) -> str:
         """
         Determines if the user's response is 'yes' or 'no'.
@@ -161,7 +97,6 @@ class LLMGameHelper:
         )
         return generate_message_using_llm(prompt + " " + self.standard_prompt_addition)
 
-    # SIMILAR TO ASSIGNMENTS 1 AND 2
     def determine_question_or_guess(self, user_input: str, secret_word: str) -> str:
         """
         Determines if the user's input is a question or a guess about the
@@ -180,7 +115,6 @@ class LLMGameHelper:
         )
         return generate_message_using_llm(prompt)
 
-    # SIMILAR TO ASSIGNMENTS 1 AND 2
     def check_if_correct_guess(self, secret_word: str, guess: str) -> str:
         """
         Checks if the player's guess matches the secret word and returns a

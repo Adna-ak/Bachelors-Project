@@ -2,3 +2,8 @@
 .vscode/
 __pycache__/
 recorded_speech.wav
+participants.json
+results_experiment_participant_1_pre.json
+results_experiment_participant_1_post.json
+test.py
+test_whisper_api.py

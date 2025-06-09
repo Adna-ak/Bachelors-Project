@@ -28,39 +28,6 @@ class KeywordsHandler:
         self.session = session
         self.game_helper = LLMGameHelper()
 
-    @inlineCallbacks
-    def check_quit_keywords(self, user_input: str) -> Generator[Optional[str], None, None]:
-        """
-        Checks if the user wants to quit the game by analyzing their input.
-
-        Args:
-            user_input (str): User's input to analyze.
-
-        Yields:
-            Generator[Optional[str], None, None]: Handles interactions related
-            to quitting the game.
-        """
-        from src.speech_processing.speech_session import SpeechRecognitionSession  # Delayed import
-        speech_recognition = SpeechRecognitionSession(self.session)
-
-        prompt = (
-            f"The user said: '{user_input}'. Determine if they want to quit the game by recognizing quit/stop words "
-            "like 'bye', 'goodbye', 'stop', 'stoppen', 'doei', 'tot ziens', et cetera. Respond with only 'yes' or 'no'."
-        )
-        response = generate_message_using_llm(prompt)
-
-        if response == "yes":
-            message = "Weet je zeker dat je het spel wilt stoppen?"
-            repeat_message = "Weet je zeker dat je het spel wilt stoppen? Antwoord alleen met 'ja' of 'nee'."
-            stop_playing = yield speech_recognition.validate_user_input(message, repeat_message, language="nl", get_feedback=False)
-
-            if self.game_helper.recognize_yes_or_no(stop_playing) == "no":
-                return
-
-            message = "Ik vond het leuk om met je te spelen, tot de volgende keer!"
-            yield say_animated(self.session, message, language="nl")
-            self.session.leave()
-
     # SIMILAR TO ASSIGNMENTS 1 AND 2
     @inlineCallbacks
     def check_hint_keywords(self, user_input: str, secret_word: str) -> Generator[Optional[str], None, None]:

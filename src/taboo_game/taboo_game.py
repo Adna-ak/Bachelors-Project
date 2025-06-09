@@ -18,7 +18,6 @@ from src.robot_movements.say_animated import say_animated
 from src.speech_processing.speech_session import SpeechRecognitionSession
 from src.taboo_game.keywords_handler import KeywordsHandler
 from src.taboo_game.llm_interface import LLMGameHelper
-from src.taboo_game.study_vocabulary import STUDY_TOPICS, STUDY_WORDS
 
 
 class TabooGame:
@@ -39,46 +38,6 @@ class TabooGame:
         self.skip_intro = False
         self.used_secret_words = []
         self.secret_words_to_repeat = []
-
-    def get_secret_word(self) -> str:
-        """
-        Determines and returns the secret word for the current round of the
-        game based on the chosen version (study words, study topics, or
-        normal).
-
-        Returns:
-            str: The selected secret word for the current round.
-        """
-        if self.version == "study words":
-            all_words = list(STUDY_WORDS.keys())
-            if not all_words:
-                self.version = "normal"
-                return self.get_secret_word()
-            if len(self.used_secret_words) == len(all_words):
-                self.used_secret_words.clear()
-            remaining_words = [word for word in all_words if word not in self.used_secret_words]
-            self.secret_word = random.choice(remaining_words)
-
-        elif self.version == "study topics":
-            if not STUDY_TOPICS:
-                self.version = "normal"
-                return self.get_secret_word()
-            topic = random.choice(STUDY_TOPICS)
-            self.secret_word = self.game_helper.generate_random_word(self.used_secret_words, topic)
-
-        else:
-            self.secret_word = self.game_helper.generate_random_word(self.used_secret_words)
-
-        if self.secret_words_to_repeat:
-            # Increases likelihood to encounter words that have not been guessed, but still keeps the usage random
-            if self.secret_word not in self.secret_words_to_repeat:
-                secret_word_choices = self.secret_words_to_repeat + [self.secret_word]
-                self.secret_word = random.choice(secret_word_choices)
-            self.secret_word = random.choice(self.secret_words_to_repeat)
-
-        print("\nSecret word:", self.secret_word, "\n")
-        self.used_secret_words.append(self.secret_word)
-        return self.secret_word
 
     @inlineCallbacks
     def offer_hint(self) -> Generator[Optional[str], None, None]:
@@ -101,29 +60,6 @@ class TabooGame:
             else:
                 hint = self.game_helper.generate_hint(self.secret_word)
             yield say_animated(self.session, hint, language="en")
-
-    # SIMILAR TO ASSIGNMENTS 1 AND 2
-    @inlineCallbacks
-    def play_again(self) -> Generator[Optional[str], None, None]:
-        """
-        Prompts the user to decide whether they want to play the game again. If
-        the user agrees, the game continues, otherwise, the game ends.
-
-        Yields:
-            Generator[Optional[str], None, None]: Yields control back to the
-            caller during speech recognition and speech output.
-        """
-        message = "Wil je nog een ronde spelen?"
-        repeat_message = "Wil je nog een ronde spelen? Antwoord alleen met 'ja' of 'nee'."
-        do_play_again = yield self.speech_recognition_session.validate_user_input(message, repeat_message, language="nl", get_feedback=False)
-
-        if self.game_helper.recognize_yes_or_no(do_play_again) == "yes":
-            self.skip_intro = True
-            yield self.play_taboo()
-
-        message = "Ik vond het leuk om met je te spelen, tot de volgende keer!"
-        yield say_animated(self.session, message, language="nl")
-        self.session.leave()
 
     # SIMILAR TO ASSIGNMENTS 1 AND 2
     @inlineCallbacks
