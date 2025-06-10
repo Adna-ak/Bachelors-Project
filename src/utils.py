@@ -75,7 +75,7 @@ def generate_message_using_llm(original_prompt: str) -> str:
     prompt = original_prompt
     avoided_words = []
     system_prompt = (
-        "You are a friendly, educational robot speaking to children aged 7-8. "
+        "You are a friendly, educational robot speaking to children aged 12. "
         "Keep your language fun, safe, simple, and never use any inappropriate or scary content."
     )
 

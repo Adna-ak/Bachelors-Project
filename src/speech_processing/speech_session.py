@@ -57,7 +57,7 @@ class SpeechRecognitionSession:
                         if self.praise_streak == 0:
                             feedback_message = generate_message_using_llm(
                                 "The child attempted to speak English."
-                                "The child is a 7-8-year-old Dutch speaker learning English. "
+                                "The child is a 12-year-old Dutch speaker learning English. "
                                 "Since they are doing well, provide a short, positive praise message in English. "
                                 "Generate only one sentence."
                             )
@@ -68,7 +68,7 @@ class SpeechRecognitionSession:
                     
                         feedback_message = generate_message_using_llm(
                             "The child attempted to speak English, but there's room for improvement. "
-                            "They are a 7-8-year-old Dutch speaker learning English. "
+                            "They are a 12-year-old Dutch speaker learning English. "
                             "Encourage them, let them know they can improve, and mention you will help them. "
                             "Keep your response short, simple, and supportive, in English."
                             "Generate only one sentence."

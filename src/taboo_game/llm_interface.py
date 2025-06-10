@@ -4,7 +4,7 @@ from src.utils import generate_message_using_llm
 class LLMGameHelper:
     def __init__(self):
         self.standard_prompt_addition = (
-            "Use simple and clear language that a 7-8-year-old native Dutch speaker "
+            "Use simple and clear language that a 12-year-old native Dutch speaker "
             "learning English as a second language can understand. "
             "Approach them like a friend."
         )
