@@ -1,3 +1,4 @@
+import time
 from typing import Generator, Optional
 from twisted.internet.defer import inlineCallbacks
 from src.robot_movements.say_animated import say_animated
@@ -40,7 +41,15 @@ class TabooGame:
         message = "I have thought of a word. Try to guess it."
         repeat_message = message
 
+        start_time = time.time()
+        time_limit_seconds = 3 * 60  # 3 minutes
+
         while True:
+            if time.time() - start_time >= time_limit_seconds:
+                timeout_message = f"Time's up! The secret word was {self.secret_word}."
+                yield say_animated(self.session, timeout_message, language="en")
+                break
+
             user_input = yield self.speech_recognition_session.validate_user_input(message, repeat_message, language="en")
 
             if self.version == "experiment":

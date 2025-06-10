@@ -94,7 +94,7 @@ def main(session, details) -> Generator[None, None, None]:
     selected_word_list = [word for word, _ in selected_words]
 
     # Save participant info + selected words
-    participants = update_participants_file(selected_word_list)
+    _ = update_participants_file(selected_word_list)
 
     # Introductory message
     # SHOULD BE DIFFERENT FOR EXPERIMENT AND CONTROL GROUPS: hints etc
