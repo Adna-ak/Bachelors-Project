@@ -101,3 +101,5 @@ class TabooGame:
             repeat_message = "Ask me a question or guess the word."
 
 # robot explains word in English if guessed wrong, else it doesnt explain
+# store how often question/guess/hint, whether it was correct or not (per round)
+# make function to make sure robot doesnt say secret word
