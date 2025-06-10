@@ -33,8 +33,8 @@ class TabooGame:
     @inlineCallbacks
     def robot_is_host(
         self,
-        max_questions_answered_no: int = 2,
-        max_wrong_guesses: int = 2
+        max_questions_answered_no: int = 3,
+        max_wrong_guesses: int = 3
     ) -> Generator[Optional[str], None, None]:
         questions_answered_no = 0
         incorrect_guesses = 0
@@ -43,7 +43,7 @@ class TabooGame:
         repeat_message = message
 
         start_time = time.time()
-        time_limit_seconds = 3 * 60  # 3 minutes
+        time_limit_seconds = 2 * 60  # 2 minutes
 
         self.round_data = {
             "guesses": 0,

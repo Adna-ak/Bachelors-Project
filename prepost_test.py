@@ -101,8 +101,8 @@ class PrePostTest:
                 used_fillers.clear()
                 unused_fillers_available = filler_imgs.copy()
 
-            chosen_fillers = random.sample(unused_fillers_available, 3)
-            used_fillers.update(chosen_fillers)
+            chosen_target_fillers = random.sample(unused_fillers_available, 1)
+            used_fillers.update(chosen_target_fillers)
 
             available_fillers = [f for f in external_filler_imgs if f not in used_fillers]
             if len(available_fillers) < 2:
@@ -112,7 +112,7 @@ class PrePostTest:
             chosen_fillers = random.sample(available_fillers, 2)
             used_fillers.update(chosen_fillers)
 
-            images_shown = chosen_fillers + [target_img]
+            images_shown = chosen_target_fillers + chosen_fillers + [target_img]
             random.shuffle(images_shown)
 
             while True:

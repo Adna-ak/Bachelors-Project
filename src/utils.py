@@ -92,7 +92,12 @@ def generate_message_using_llm(original_prompt: str) -> str:
             raise RuntimeError("LLM response is empty.")
 
         response = completion.choices[0].message.content.strip()
-        language = detect(response)
+
+        if response and any(char.isalpha() for char in response):
+            language = detect(response)
+        else:
+            language = "en"
+
         profanity = check_profanity(response, lang=language if language in ["en", "nl"] else "en")
 
         if profanity and profanity.get("profanity", {}).get("matches"):

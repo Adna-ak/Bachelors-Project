@@ -1,5 +1,7 @@
 pip install nltk
 pip install spacy
+python -m spacy download nl_core_news_sm
+python -m spacy download en_core_web_sm
 pip3 install autobahn[twisted,serialization] pyopenssl
 pip3 install alpha_mini_rug
 

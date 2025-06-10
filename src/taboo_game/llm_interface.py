@@ -42,8 +42,7 @@ class LLMGameHelper:
         """
         prompt = (
             f"The user has asked the following question: '{question}' about the secret word: '{secret_word}'. "
-            "Your response should follow this format: first answer with either 'yes' or 'no', then provide a short explanation in English. "
-            "For example: 'yes, ...' or 'no, ...'. "
+            "Answer to their question with a short response. "
             "Do not mention the secret word, including any abbreviations or parts of the word. "
             "Your explanation should help the user understand more about the secret word without telling them what it is. "
             "Generate max 15 words."
@@ -74,7 +73,8 @@ class LLMGameHelper:
         """
         prompt = (
             f"The user has said: '{user_input}'. Determine if this is a yes/no question about the secret word "
-            f"or a guess of the secret word: {secret_word}. Respond with only 'question' or 'guess'."
+            f"or a guess of the secret word: {secret_word}. A guess could start with 'I think...', 'The word is...' "
+            "A question usually starts with a verb. Respond with only 'question' or 'guess'."
         )
         return generate_message_using_llm(prompt)
 

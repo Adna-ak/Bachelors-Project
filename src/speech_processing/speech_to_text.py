@@ -174,19 +174,14 @@ class SpeechToText:
 
         try:
             with open(audio_path, "rb") as audio_file:
-                kwargs = {
-                    "model": "gpt-4o-transcribe",
-                    "file": audio_file,
-                    "response_format": "text",
-                    "prompt": (
+                transcript = client.audio.transcriptions.create(
+                    model="gpt-4o-transcribe",
+                    file=audio_file,
+                    response_format="text",
+                    prompt = (
                         "The following conversation is of a 12 year old Dutch child trying to learn English."
-                    ),
-                }
-
-                if version == "control":
-                    kwargs["language"] = "en"
-
-                transcript = client.audio.transcriptions.create(**kwargs)
+                    )
+                )
 
             if transcript:
                 result = transcript

@@ -138,15 +138,15 @@ def main(session, details) -> Generator[None, None, None]:
     print(prompt)
     _ = input().strip().lower()
 
-    # Explanation about 1 minute waiting time
+    # Explanation about 30 sec waiting time
     prompt = (
-        "We zullen nu een minuut wachten voordat we verdergaan met het "
+        "We zullen nu een halve minuut wachten voordat we verdergaan met het "
         "experiment. Ik zal elke tien seconden naar je zwaaien."
     )
     yield say_animated(session, prompt, language="nl")
 
-    # Repeat BlocklyWaveRightArm every 10 seconds for 1 minute
-    for _ in range(6):
+    # Repeat BlocklyWaveRightArm every 10 seconds for 30 sec
+    for _ in range(3):
         yield session.call("rom.optional.behavior.play", name="BlocklyWaveRightArm")
         yield wait(10)
 
@@ -165,6 +165,7 @@ def main(session, details) -> Generator[None, None, None]:
     for i, word in enumerate(selected_word_list):
         if i != 0:
             yield say_animated(session, prompt, language="en")
+
         game.secret_word = word
         round_result = yield game.robot_is_host()
 
@@ -177,15 +178,15 @@ def main(session, details) -> Generator[None, None, None]:
     # Save game results per participant
     save_game_data(game_results, PARTICIPANT_NUM)
 
-    # Explanation about 1 minute waiting time
+    # Explanation about 30 sec waiting time
     prompt = (
-        "We zullen nu een minuut wachten voordat we verdergaan met de laatste "
+        "We zullen nu een halve minuut wachten voordat we verdergaan met de laatste "
         "test. Ik zal elke tien seconden naar je zwaaien."
     )
     yield say_animated(session, prompt, language="nl")
 
-    # Repeat BlocklyWaveRightArm every 10 seconds for 1 minute
-    for _ in range(6):
+    # Repeat BlocklyWaveRightArm every 10 seconds for 30 sec
+    for _ in range(3):
         yield session.call("rom.optional.behavior.play", name="BlocklyWaveRightArm")
         yield wait(10)
 
@@ -235,7 +236,7 @@ def main(session, details) -> Generator[None, None, None]:
 
 wamp = Component(
     transports=[{"url": "ws://wamp.robotsindeklas.nl", "serializers": ["msgpack"], "max_retries": 0}],
-    realm="rie.67e3bbe8540602623a34ef14",
+    realm="rie.6847b5839827d41c0733920b",
 )
 
 wamp.on_join(main)
