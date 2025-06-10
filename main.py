@@ -77,6 +77,14 @@ def update_participants_file(selected_words=None):
 def wait(seconds):
     return task.deferLater(reactor, seconds, lambda: None)
 
+def save_game_data(game_data, participant_num):
+    folder = os.path.join("data", "game")
+    os.makedirs(folder, exist_ok=True)
+    filename = f"{participant_num}.json"
+    filepath = os.path.join(folder, filename)
+    with open(filepath, "w") as f:
+        json.dump(game_data, f, indent=4)
+
 @inlineCallbacks
 def main(session, details) -> Generator[None, None, None]:
     if GAME_VERSION not in VALID_GAME_VERSIONS:
@@ -151,13 +159,23 @@ def main(session, details) -> Generator[None, None, None]:
 
     prompt = ("Let's play another round!")
     random.shuffle(selected_word_list)
+    game_results = []
 
     # WOW game, 5 rounds
     for i, word in enumerate(selected_word_list):
         if i != 0:
             yield say_animated(session, prompt, language="en")
         game.secret_word = word
-        yield game.robot_is_host()
+        round_result = yield game.robot_is_host()
+
+        game_results.append({
+            "round": i + 1,
+            "target_word": word,
+            "result": round_result,
+        })
+
+    # Save game results per participant
+    save_game_data(game_results, PARTICIPANT_NUM)
 
     # Explanation about 1 minute waiting time
     prompt = (
