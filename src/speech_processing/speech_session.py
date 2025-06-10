@@ -9,6 +9,7 @@ Description:
     It ensures continuous prompting until valid speech is detected.
 """
 
+import os
 from typing import Generator, Optional
 from twisted.internet.defer import inlineCallbacks
 from src.speech_processing.speech_to_text import SpeechToText
@@ -24,89 +25,34 @@ class SpeechRecognitionSession:
     for input, detecting prolonged silence, and responding accordingly.
     """
 
-    def __init__(self, session):
+    def __init__(self, session, version):
         self.session = session
-        self.processor = SpeechToText(device_index=1)  # Index for Sennheiser microphone (on my laptop), which we tested
+
+        if version not in {"experiment", "control"}:
+            raise ValueError(f"Invalid version: {version}. Must be 'experiment' or 'control'.")
+
+        self.get_feedback = (version == "experiment")
+        self.processor = SpeechToText()
         self.keywords_handler = KeywordsHandler(session)
         self.praise_streak = 0
 
     @inlineCallbacks
-    def check_silence(self, silence_count: int, max_silence_count: int = 3) -> Generator[Optional[str], None, int]:
-        """
-        Checks if the user has been silent for a certain number of consecutive
-        attempts. If silence is detected, it will prompt the user with a
-        question asking if they are still present. If there is no response,
-        the game will end.
-
-        Args:
-            silence_count (int): Number of consecutive silent attempts.
-            max_silence_count (int, optional): Threshold for silence detection.
-                Defaults to 3.
-
-        Returns:
-            int: Updated silence count.
-
-        Yields:
-            Generator[Optional[str], None, int]: Handles speech recognition and
-            speaking prompts.
-        """
-        if silence_count == max_silence_count:
-            message = "Hallo, ben je er nog?"
-            yield say_animated(self.session, message, language="nl")
-            user_input = yield self.recognize_speech()
-
-            if user_input is None:
-                message = (
-                    "Ik zal ervanuitgaan dat je er niet meer bent. Ik zal het spel beëindigen. "
-                    "Ik vond het leuk om met je te spelen, tot de volgende keer!"
-                )
-                yield say_animated(self.session, message, language="nl")
-                self.session.leave()
-
-            silence_count = 0
-            message = "Oh leuk, je bent er nog!"
-            yield say_animated(self.session, message, language="nl")
-
-        return silence_count
-
-    @inlineCallbacks
     def validate_user_input(
-        self, prompt_message: str, silence_message: str, language: str = "en", get_feedback: bool = True
+        self, prompt_message: str, silence_message: str, language: str = "en"
     ) -> Generator[Optional[str], None, str]:
-        """
-        Continuously prompts the user for input until valid speech is detected.
-        Evaluates English usage and provides feedback.
-
-        Args:
-            prompt_message (str): Initial message prompting the user for input.
-            silence_message (str): Message repeated if no input is detected.
-            language (str): The language of the speech (default is English).
-            get_feedback (bool): Whether to evaluate and give feedback on the
-                user input. Defaults to True.
-
-        Returns:
-            str: Validated user input.
-
-        Yields:
-            Generator[Optional[str], None, str]: Yields the recognized user
-            input when detected.
-        """
-        silence_count = 0
         yield say_animated(self.session, prompt_message, language)
 
-        if get_feedback:
+        if self.get_feedback:
             self.language_assistant = LanguageAssistant(self.session)
 
         while True:
             user_input = yield self.recognize_speech()
 
             if user_input:
-                yield self.keywords_handler.check_quit_keywords(user_input)
-                # Still gives feedback after detecting quit keyword, idk why
-                if get_feedback:
+                if self.get_feedback:
                     percent_english = self.language_assistant.calculate_language_usage(user_input)
                     if percent_english >= 70:  # Keeping in mind that this is for kids, 70% is okay
-                        if self.praise_streak == 3:
+                        if self.praise_streak == 2:
                             self.praise_streak = 0
                         if self.praise_streak == 0:
                             feedback_message = generate_message_using_llm(
@@ -134,8 +80,6 @@ class SpeechRecognitionSession:
 
                 return user_input
 
-            silence_count += 1
-            silence_count = yield self.check_silence(silence_count)
             yield say_animated(self.session, silence_message, language)
 
     @inlineCallbacks
@@ -157,7 +101,6 @@ class SpeechRecognitionSession:
             Generator[Optional[str], None, str]: Yields a string with the
             recognized sentence when detected.
         """
-        silence_count = 0
         yield say_animated(self.session, f"Now, try saying: '{example_sentence}'.", language="en")
 
         while True:
@@ -166,30 +109,22 @@ class SpeechRecognitionSession:
             if repeated_input:
                 return repeated_input
 
-            silence_count += 1
-            silence_count = yield self.check_silence(silence_count)
             silence_message = f"I couldn't hear you. Please try saying: '{example_sentence}'."
             yield say_animated(self.session, silence_message, language="en")
 
     @inlineCallbacks
     def recognize_speech(self) -> Generator[None, None, Optional[str]]:
-        """
-        Records audio from the user, processes the speech input, and returns
-        the transcribed text if successful.
-
-        Returns:
-            Optional[str]: The transcribed text from the recorded speech, or
-            None if no valid transcription is available.
-
-        Yields:
-            Generator[None, None, Optional[str]]: Yields the result
-            asynchronously after processing the audio.
-        """
         recorded_audio_path = yield self.processor.record_audio()
 
         if recorded_audio_path:
-            transcription_result = yield self.processor.process_audio(self.session, recorded_audio_path)
-            if transcription_result and 'text' in transcription_result:
-                print("Transcription:", transcription_result['text'])
-                return transcription_result['text']
+            transcription_result = yield self.processor.process_audio(recorded_audio_path)
+            if transcription_result:
+                print("Transcription:", transcription_result)
+                if os.path.exists(recorded_audio_path):
+                    os.remove(recorded_audio_path)
+                return transcription_result
+            
+            if os.path.exists(recorded_audio_path):
+                os.remove(recorded_audio_path)
+
         return None
