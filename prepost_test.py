@@ -84,28 +84,35 @@ class PrePostTest:
     def conduct_test(self, selected_words, test_type="pre"):
         all_words = list(self.words.items())
         filler_words = [w for w in all_words if w not in selected_words]
+        filler_imgs = [img for _, img in filler_words]
         trials = selected_words.copy()
+
         if test_type == "post":
             random.shuffle(trials)
 
         external_filler_imgs = [os.path.basename(p) for p in glob.glob(os.path.join(self.images_folder, "fillers", "*.*"))]
-
         results = []
+        used_fillers = set()
 
         for i, (word, target_img) in enumerate(trials, 1):
-            # PREPARE trial ONCE
-            chosen_fillers = random.sample(filler_words, 3)
-            filler_imgs = [f[1] for f in chosen_fillers]
+            unused_fillers_available = [img for img in filler_imgs if img not in used_fillers]
 
-            num_to_replace = random.choice([0, 1, 2])
-            if num_to_replace > 0 and external_filler_imgs:
-                replace_indices = random.sample(range(len(filler_imgs)), num_to_replace)
-                replacement_imgs = random.sample(external_filler_imgs, num_to_replace)
-                for idx_r, new_img in zip(replace_indices, replacement_imgs):
-                    filler_imgs[idx_r] = new_img
+            if len(unused_fillers_available) < 1:
+                used_fillers.clear()
+                unused_fillers_available = filler_imgs.copy()
 
-            # SHUFFLE ONCE
-            images_shown = filler_imgs + [target_img]
+            chosen_fillers = random.sample(unused_fillers_available, 3)
+            used_fillers.update(chosen_fillers)
+
+            available_fillers = [f for f in external_filler_imgs if f not in used_fillers]
+            if len(available_fillers) < 2:
+                used_fillers.clear()
+                available_fillers = [f for f in external_filler_imgs if f not in used_fillers]
+
+            chosen_fillers = random.sample(available_fillers, 2)
+            used_fillers.update(chosen_fillers)
+
+            images_shown = chosen_fillers + [target_img]
             random.shuffle(images_shown)
 
             while True:
