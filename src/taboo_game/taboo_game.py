@@ -46,8 +46,9 @@ class TabooGame:
 
         while True:
             if time.time() - start_time >= time_limit_seconds:
-                timeout_message = f"Time's up! The secret word was {self.secret_word}."
-                yield say_animated(self.session, timeout_message, language="en")
+                word_explanation = self.game_helper.generate_secret_word_explanation(self.secret_word)
+                message = f"Time's up! The secret word is {self.secret_word}. {word_explanation}"
+                yield say_animated(self.session, message, language="en")
                 break
 
             user_input = yield self.speech_recognition_session.validate_user_input(message, repeat_message, language="en")
@@ -95,9 +96,8 @@ class TabooGame:
                     tell_secret_word = yield self.speech_recognition_session.validate_user_input(message, repeat_message, language="en")
 
                     if self.game_helper.recognize_yes_or_no(tell_secret_word) == "yes":
-                        message = (
-                            f"The secret word is {self.secret_word}."
-                        )
+                        word_explanation = self.game_helper.generate_secret_word_explanation(self.secret_word)
+                        message = f"The secret word is {self.secret_word}. {word_explanation}"
                         yield say_animated(self.session, message, language="en")
                         break
 
@@ -108,6 +108,5 @@ class TabooGame:
             message = ""
             repeat_message = "Ask me a question or guess the word."
 
-# robot explains word in English if guessed wrong, else it doesnt explain
 # store how often question/guess/hint, whether it was correct or not (per round)
 # make function to make sure robot doesnt say secret word

@@ -95,3 +95,12 @@ class LLMGameHelper:
             "Respond with only 'correct' or 'incorrect'."
         )
         return generate_message_using_llm(prompt)
+
+    def generate_secret_word_explanation(self, secret_word: str) -> str:
+        """
+        Generates a short one-sentence explanation of the secret word.
+        """
+        prompt = (
+            f"Explain the word '{secret_word}' in one short sentence."
+        )
+        return generate_message_using_llm(prompt + " " + self.standard_prompt_addition)
