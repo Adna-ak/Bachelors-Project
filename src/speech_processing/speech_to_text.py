@@ -1,65 +1,34 @@
-"""
-File:     speech_to_text.py
-Authors:  Özde Pilli (s5257018) and Adna Kapidžić (s5256100)
-Group:    5
-
-Description:
-    This module handles the conversion of speech to text using OpenAI's
-    Whisper model. It records audio from a microphone, processes the recorded
-    audio, and returns a transcription.
-
-    You can even use an external microphone to make the STT more accurate,
-    even though the difference is minimal if your device microphone is
-    working properly and there is not too much background noise. However,
-    we did not test the effect with speech from kids.
-
-    We tested this with the Sennheiser microphone that can be found in the
-    robotics lab, it will show up like this in the microphones list;
-    Microfoon (Sennheiser Profile). There are 4 of these in the list, but the
-    first one works best and does not trigger errors. Check on your device
-    what index the mic is on that you want to use.
-"""
-
 import os
 import wave
 import time
 from typing import Any, Dict, Generator, Optional, Tuple
 import pyaudio
-import whisper  # From https://github.com/openai/whisper
 import numpy as np
+from openai import OpenAI
 from pydub import AudioSegment
 from pydub.silence import detect_nonsilent
-from twisted.internet.threads import deferToThread
-from twisted.internet.defer import inlineCallbacks, DeferredList
 from src.speech_processing.mic_util import MicUtil
 
 
-class SpeechToText:
-    """
-    A class that handles speech-to-text conversion using OpenAI's Whisper
-    model. It records audio from the microphone, processes the audio, and
-    returns transcriptions.
-    """
-    _shared_model = None
+API_KEY = os.getenv("OPENAI_API_KEY")
+if not API_KEY:
+    raise ValueError("OPENAI_API_KEY is not set. Please set it in your environment variables.")
 
-    def __init__(
-            self, silence_threshold: int = 5000,
-            model_size: str = "large", sample_rate: int = 44100,
-            channels: int = 1, chunk_size: int = 1024,
-            device_index: int | None = None
-    ):
+client = OpenAI(api_key=API_KEY)
+
+
+class SpeechToText:
+    def __init__(self,
+                 silence_threshold: int = 3000,
+                 sample_rate: int = 44100,
+                 channels: int = 1,
+                 chunk_size: int = 1024,
+                 device_index: int | None = None):
         self.silence_threshold = silence_threshold  # Depends on how noisy the room is
         self.sample_rate = sample_rate
         self.channels = channels
         self.chunk_size = chunk_size
         self.device_index = device_index
-
-        if SpeechToText._shared_model is None:
-            print("Whisper model loading...")
-            SpeechToText._shared_model = whisper.load_model(model_size)
-            print("Whisper model loaded successfully!")
-
-        self.model = SpeechToText._shared_model
         self.mic_util = MicUtil()
 
     def choose_mic(self) -> Dict[str, int | str]:
@@ -95,6 +64,33 @@ class SpeechToText:
         stream = audio_interface.open(format=pyaudio.paInt16, channels=self.channels, rate=self.sample_rate, input=True,
                                       input_device_index=mic_info['index'], frames_per_buffer=self.chunk_size)
         return audio_interface, stream
+
+    def save_audio(self, frames: list, output_filename: str) -> Optional[str]:
+        """
+        Saves the recorded frames to an audio file.
+
+        Args:
+            frames (list): The audio frames to be saved.
+            output_filename (str): The name of the output file to save the
+                audio.
+
+        Returns:
+            Optional[str]: The path to the saved audio file, or None if the
+            file is empty.
+        """
+        audio_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), output_filename)
+        with wave.open(audio_path, 'wb') as wf:
+            wf.setnchannels(self.channels)
+            wf.setsampwidth(pyaudio.PyAudio().get_sample_size(pyaudio.paInt16))
+            wf.setframerate(self.sample_rate)
+            wf.writeframes(b''.join(frames))
+
+        if os.path.getsize(audio_path) == 0:
+            print("No audio was recorded. Skipping transcription.")
+            return None
+
+        print(f"Audio recorded and saved to {audio_path}")
+        return audio_path
 
     def record_audio(self, output_filename: str = "recorded_speech.wav") -> Optional[str]:
         """
@@ -137,33 +133,6 @@ class SpeechToText:
         audio_path = self.save_audio(frames, output_filename)
         return audio_path
 
-    def save_audio(self, frames: list, output_filename: str) -> Optional[str]:
-        """
-        Saves the recorded frames to an audio file.
-
-        Args:
-            frames (list): The audio frames to be saved.
-            output_filename (str): The name of the output file to save the
-                audio.
-
-        Returns:
-            Optional[str]: The path to the saved audio file, or None if the
-            file is empty.
-        """
-        audio_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), output_filename)
-        with wave.open(audio_path, 'wb') as wf:
-            wf.setnchannels(self.channels)
-            wf.setsampwidth(pyaudio.PyAudio().get_sample_size(pyaudio.paInt16))
-            wf.setframerate(self.sample_rate)
-            wf.writeframes(b''.join(frames))
-
-        if os.path.getsize(audio_path) == 0:
-            print("No audio was recorded. Skipping transcription.")
-            return None
-
-        print(f"Audio recorded and saved to {audio_path}")
-        return audio_path
-
     def trim_silence(self, audio_path: str, silence_thresh: int = -40, min_silence_len: int = 500) -> Optional[str]:
         """
         Removes silent segments from the beginning and end of an audio file.
@@ -196,20 +165,7 @@ class SpeechToText:
         trimmed_audio.export(audio_path, format="wav")
         return audio_path
 
-    @inlineCallbacks
-    def process_audio(self, session, audio_path: str) -> Generator[Dict[str, Any], None, Dict[str, Any]]:
-        """
-        Processes the recorded audio and transcribes it using the Whisper
-        model.
-
-        Args:
-            session: The session object used for robot interaction.
-            audio_path (str): The path to the audio file to be processed.
-
-        Returns:
-            Generator[Dict[str, Any], None, Dict[str, Any]]: Generator
-            yielding the final transcription result as a dictionary.
-        """
+    def process_audio(self, audio_path: str) -> Generator[Dict[str, Any], None, Dict[str, Any]]:
         trimmed_audio_path = self.trim_silence(audio_path)
         result = {}
 
@@ -217,14 +173,19 @@ class SpeechToText:
             return result
 
         try:
-            transcribe_deferred = deferToThread(self.model.transcribe, trimmed_audio_path)
-            move_deferred = session.call("rom.optional.behavior.play", name="BlocklyStand")
+            with open(trimmed_audio_path, "rb") as audio_file:
+                transcript = client.audio.transcriptions.create(
+                    model="gpt-4o-transcribe",
+                    file=audio_file,
+                    response_format="text",
+                    prompt=(
+                        "The following conversation is of a 12 year old Dutch child trying to learn English. "
+                        "They might not be able to fully speak in English, so you can expect some Dutch words as well."
+                    )
+                )
 
-            results = yield DeferredList([transcribe_deferred, move_deferred])
-
-            transcribe_result = results[0][1]
-            if transcribe_result:
-                result = transcribe_result
+            if transcript:
+                result = transcript
             else:
                 print("Transcription failed.")
 
