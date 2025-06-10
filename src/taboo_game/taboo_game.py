@@ -1,5 +1,4 @@
 from typing import Generator, Optional
-import random
 from twisted.internet.defer import inlineCallbacks
 from src.robot_movements.say_animated import say_animated
 from src.speech_processing.speech_session import SpeechRecognitionSession
@@ -13,7 +12,7 @@ class TabooGame:
         self.version = version
         self.keywords_handler = KeywordsHandler(session)
         self.game_helper = LLMGameHelper()
-        self.speech_recognition_session = SpeechRecognitionSession(self.session)
+        self.speech_recognition_session = SpeechRecognitionSession(self.session, self.version)
         self.secret_word = None
 
     @inlineCallbacks
