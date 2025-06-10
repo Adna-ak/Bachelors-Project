@@ -19,7 +19,7 @@ client = OpenAI(api_key=API_KEY)
 
 class SpeechToText:
     def __init__(self,
-                 silence_threshold: int = 3000,
+                 silence_threshold: int = 2500,
                  sample_rate: int = 44100,
                  channels: int = 1,
                  chunk_size: int = 1024,
@@ -165,7 +165,7 @@ class SpeechToText:
         trimmed_audio.export(audio_path, format="wav")
         return audio_path
 
-    def process_audio(self, audio_path: str) -> Generator[Dict[str, Any], None, Dict[str, Any]]:
+    def process_audio(self, audio_path: str, version: str) -> Generator[Dict[str, Any], None, Dict[str, Any]]:
         trimmed_audio_path = self.trim_silence(audio_path)
         result = {}
 
@@ -173,16 +173,20 @@ class SpeechToText:
             return result
 
         try:
-            with open(trimmed_audio_path, "rb") as audio_file:
-                transcript = client.audio.transcriptions.create(
-                    model="gpt-4o-transcribe",
-                    file=audio_file,
-                    response_format="text",
-                    prompt=(
-                        "The following conversation is of a 12 year old Dutch child trying to learn English. "
-                        "They might not be able to fully speak in English, so you can expect some Dutch words as well."
-                    )
-                )
+            with open(audio_path, "rb") as audio_file:
+                kwargs = {
+                    "model": "gpt-4o-transcribe",
+                    "file": audio_file,
+                    "response_format": "text",
+                    "prompt": (
+                        "The following conversation is of a 12 year old Dutch child trying to learn English."
+                    ),
+                }
+
+                if version == "control":
+                    kwargs["language"] = "en"
+
+                transcript = client.audio.transcriptions.create(**kwargs)
 
             if transcript:
                 result = transcript

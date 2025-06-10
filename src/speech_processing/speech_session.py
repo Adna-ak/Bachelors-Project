@@ -26,12 +26,12 @@ class SpeechRecognitionSession:
     """
 
     def __init__(self, session, version):
-        self.session = session
-
         if version not in {"experiment", "control"}:
             raise ValueError(f"Invalid version: {version}. Must be 'experiment' or 'control'.")
 
-        self.get_feedback = (version == "experiment")
+        self.session = session
+        self.version = version
+        self.get_feedback = (self.version == "experiment")
         self.processor = SpeechToText()
         self.keywords_handler = KeywordsHandler(session)
         self.praise_streak = 0
@@ -117,7 +117,7 @@ class SpeechRecognitionSession:
         recorded_audio_path = yield self.processor.record_audio()
 
         if recorded_audio_path:
-            transcription_result = yield self.processor.process_audio(recorded_audio_path)
+            transcription_result = yield self.processor.process_audio(recorded_audio_path, self.version)
             if transcription_result:
                 print("Transcription:", transcription_result)
                 if os.path.exists(recorded_audio_path):
