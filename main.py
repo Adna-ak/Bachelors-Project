@@ -105,12 +105,24 @@ def main(session, details) -> Generator[None, None, None]:
     _ = update_participants_file(selected_word_list)
 
     # Introductory message
-    # SHOULD BE DIFFERENT FOR EXPERIMENT AND CONTROL GROUPS: hints etc
-    prompt = (
-        "Hallo! Wat leuk dat je meedoet aan het experiment. "
-        "We gaan straks samen een paar korte spelletjes doen. "
-        "Volg gewoon mijn uitleg en dan komt het helemaal goed!"
-    )
+    if GAME_VERSION == "experiment":
+        prompt = (
+            "Hallo! Wat leuk dat je meedoet aan het experiment. "
+            "We gaan straks samen een paar korte spelletjes doen. "
+            "Ik zal een woord in gedachten nemen en jij zal mij vragen "
+            "gaan stellen om te raden welk woord ik in gedachten heb. "
+            "Je mag Nederlands spreken, maar probeer zo veel Engels te spreken. "
+            "Ik zal je helpen om in het Engels te spreken."
+        )
+    else:
+        prompt = (
+            "Hallo! Wat leuk dat je meedoet aan het experiment. "
+            "We gaan straks samen een paar korte spelletjes doen. "
+            "Ik zal een woord in gedachten nemen en jij zal mij vragen "
+            "gaan stellen om te raden welk woord ik in gedachten heb. "
+            "Probeer zo veel mogelijk Engels te spreken, "
+            "want ik versta geen Nederlands."
+        )
     yield say_animated(session, prompt, language="nl")
 
     # Pre-test explanation
